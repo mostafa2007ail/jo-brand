@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>تفاصيل المنتج</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --gold: #c9a84c;
+            --gold-light: #e8c97a;
+            --gold-dark: #9a7a2e;
+            --black: #0a0a0a;
+            --dark: #111;
+            --dark2: #1a1a1a;
+            --dark3: #222;
+            --white: #f5f0e8;
+            --gray: #888;
+            --error: #e05252;
+            --success: #52c77a;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--black);
+            color: var(--white);
+            min-height: 100vh;
+        }
+
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            opacity: 0.03;
+            z-index: 0;
+            pointer-events: none;
+            background-image: linear-gradient(var(--gold) 1px, transparent 1px), linear-gradient(90deg, var(--gold) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(10, 10, 10, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(201, 168, 76, 0.12);
+            padding: 0 32px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: none;
+            border: 1px solid rgba(201, 168, 76, 0.2);
+            color: var(--gray);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .nav-brand {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--gold);
+            margin-right: auto;
+        }
+
+        .product-main {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 50px 32px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: start;
+        }
+
+        .img-wrap {
+            position: sticky;
+            top: 90px;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(201, 168, 76, 0.15);
+            aspect-ratio: 4/5;
+            background: var(--dark2);
+        }
+
+        .main-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .img-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 6rem;
+            color: var(--gray);
+        }
+
+        .product-category-badge {
+            display: inline-block;
+            padding: 4px 14px;
+            background: rgba(201, 168, 76, 0.1);
+            border: 1px solid rgba(201, 168, 76, 0.25);
+            border-radius: 50px;
+            color: var(--gold);
+            font-size: 0.78rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .product-title {
+            font-size: 2.2rem;
+            font-weight: 900;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+
+        .product-price-big {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--gold);
+            margin-bottom: 24px;
+            display: block;
+        }
+
+        .product-price-big::after {
+            content: ' جنيه';
+            font-size: 1rem;
+            color: var(--gray);
+            font-weight: 400;
+        }
+
+        .divider-line {
+            height: 1px;
+            background: rgba(201, 168, 76, 0.1);
+            margin: 24px 0;
+        }
+
+        .product-desc {
+            font-size: 0.95rem;
+            color: #aaa;
+            line-height: 1.8;
+            margin-bottom: 28px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .detail-label {
+            font-size: 0.82rem;
+            color: var(--gray);
+        }
+
+        .detail-value {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        .btn-buy {
+            width: 100%;
+            padding: 16px;
+            margin-top: 24px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            border: none;
+            border-radius: 12px;
+            color: var(--black);
+            font-family: 'Cairo', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s;
+            text-align: center;
+        }
+
+        .btn-buy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(201, 168, 76, 0.35);
+        }
+
+        .btn-buy:disabled {
+            background: var(--gray);
+            color: var(--dark);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .order-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(6px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .order-modal-overlay.open {
+            display: flex;
+        }
+
+        .order-modal {
+            background: var(--dark2);
+            border: 1px solid rgba(201, 168, 76, 0.2);
+            border-radius: 20px;
+            padding: 36px;
+            width: 100%;
+            max-width: 500px;
+            animation: scaleIn 0.3s ease;
+        }
+
+        .order-form-group {
+            margin-bottom: 16px;
+        }
+
+        .order-form-label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--gold-light);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .order-form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(201, 168, 76, 0.2);
+            border-radius: 10px;
+            color: var(--white);
+            font-family: 'Cairo', sans-serif;
+            outline: none;
+        }
+
+        .order-form-input:focus {
+            border-color: var(--gold);
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.92);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .similar-section {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 32px 60px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--gold);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(201, 168, 76, 0.15);
+        }
+
+        .similar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .sim-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(201, 168, 76, 0.1);
+            border-radius: 14px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .sim-card:hover {
+            border-color: rgba(201, 168, 76, 0.35);
+            transform: translateY(-4px);
+        }
+
+        .sim-img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            background: var(--dark3);
+        }
+
+        .sim-placeholder {
+            width: 100%;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            background: var(--dark2);
+        }
+
+        .sim-info {
+            padding: 12px;
+        }
+
+        .sim-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .sim-price {
+            font-size: 0.9rem;
+            color: var(--gold);
+            font-weight: 700;
+            direction: ltr;
+            display: inline-block;
+        }
+
+        .sim-price::after {
+            content: ' ج';
+            font-size: 0.7rem;
+            color: var(--gray);
+            font-weight: 400;
+        }
+
+        @media (max-width: 768px) {
+            .product-main {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                padding: 30px 16px;
+            }
+
+            .img-wrap {
+                position: static;
+                aspect-ratio: 1;
+            }
+
+            .similar-section {
+                padding: 0 16px 40px;
+            }
+
+            .similar-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 14px;
+            }
+
+            .order-modal {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-grid"></div>
+
+    <nav>
+        <button class="back-btn" onclick="location.href='index.html'">← الرئيسية</button>
+        <div class="nav-brand">👑 jo brand 1</div>
+    </nav>
+
+    <div class="product-main" id="product-main">
+        <div style="grid-column:1/-1; text-align:center; padding:50px; color:var(--gray)">⏳ جاري تحميل تفاصيل المنتج...
+        </div>
+    </div>
+
+    <div class="similar-section" id="similar-section" style="display:none">
+        <div class="section-title" id="similar-title">منتجات مشابهة</div>
+        <div class="similar-grid" id="similar-grid"></div>
+    </div>
+
+    <div class="order-modal-overlay" id="orderModal">
+        <div class="order-modal">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                <h3 style="color:var(--gold)">🛒 إكمال تفاصيل الطلب</h3>
+                <button onclick="closeOrderModal()"
+                    style="background:none; border:none; color:var(--gray); cursor:pointer; font-size:1.5rem; outline:none;">✕</button>
+            </div>
+
+            <div id="order-msg"
+                style="display:none; padding:12px; border-radius:8px; margin-bottom:16px; font-size:0.9rem; font-weight:600; text-align:center;">
+            </div>
+
+            <div class="order-form-group">
+                <label class="order-form-label">الاسم بالكامل *</label>
+                <input type="text" id="cust-name" class="order-form-input" placeholder="اكتب اسمك الثلاثي">
+            </div>
+            <div class="order-form-group">
+                <label class="order-form-label">رقم الهاتف للتواصل *</label>
+                <input type="tel" id="cust-phone" class="order-form-input" placeholder="01xxxxxxxxx">
+            </div>
+            <div class="order-form-group">
+                <label class="order-form-label">المحافظة *</label>
+                <input type="text" id="cust-gov" class="order-form-input"
+                    placeholder="مثال: القاهرة، الإسكندرية، الجيزة...">
+            </div>
+            <div class="order-form-group">
+                <label class="order-form-label">العنوان بالتفصيل *</label>
+                <input type="text" id="cust-address" class="order-form-input"
+                    placeholder="اسم الشارع، رقم العمارة، رقم الشقة">
+            </div>
+
+            <!-- ✅ حقل المقاس الجديد -->
+            <div class="order-form-group">
+                <label class="order-form-label">المقاس *</label>
+                <input type="text" id="cust-size" class="order-form-input" placeholder="مثال: S, M, L, XL, XXL">
+            </div>
+
+            <button onclick="submitOrder()" class="btn-buy" style="margin-top:10px;" id="btn-submit-order">✅ تأكيد
+                الأوردر</button>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://qispnunbwbuhehgsjbjr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpc3BudW5id2J1aGVoZ3NqYmpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NTM3MjYsImV4cCI6MjA5NjIyOTcyNn0.G1n4TA8nDYGqjS6Be8FBKUE7l_pvKHqCi2J2I7NI--Y';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentProductData = null;
+
+        function getCategoryEmoji(cat) {
+            const map = { 'تيشرت': '👕', 'بنطلون': '👖', 'جاكيت': '🧥', 'حذاء': '👟', 'شنطة': '👜', 'اكسسوار': '💍' };
+            return map[cat] || '👗';
+        }
+
+        const params = new URLSearchParams(location.search);
+        const id = parseInt(params.get('id'));
+
+        async function loadProduct() {
+            if (!id) return;
+            const { data: product, error } = await sb.from('products').select('*').eq('id', id).single();
+
+            if (error || !product) {
+                document.getElementById('product-main').innerHTML = `
+                    <div style="grid-column:1/-1;text-align:center;padding:80px 20px;color:#888">
+                        <h3>المنتج غير موجود أو تم حذفه</h3>
+                        <button onclick="window.location.href='index.html'" style="margin-top:16px;padding:10px 24px;background:#c9a84c;border:none;border-radius:8px;cursor:pointer">العودة للمتجر</button>
+                    </div>`;
+                return;
+            }
+
+            currentProductData = product;
+            document.title = product.name + ' - jo brand 1';
+
+            document.getElementById('product-main').innerHTML = `
+                <div class="img-wrap">
+                    ${product.image ? `<img class="main-img" src="${product.image}">` : `<div class="img-placeholder"><span>${getCategoryEmoji(product.category)}</span></div>`}
+                </div>
+                <div class="info-side">
+                    <div class="product-category-badge">${product.category || 'عام'}</div>
+                    <h1 class="product-title">${product.name}</h1>
+                    <span class="product-price-big">${product.price}</span>
+                    ${product.description ? `<p class="product-desc">${product.description}</p>` : ''}
+                    <div class="divider-line"></div>
+                    ${product.sizes ? `<div class="detail-row"><span class="detail-label">المقاسات المتاحة</span><span class="detail-value">${product.sizes}</span></div>` : ''}
+                    ${product.colors ? `<div class="detail-row"><span class="detail-label">الألوان المتاحة</span><span class="detail-value">${product.colors}</span></div>` : ''}
+                    <div class="detail-row"><span class="detail-label">الحالة</span><span class="detail-value" style="color:#52c77a">متاح بالفروع وعبر الطلب ✓</span></div>
+                    <div class="divider-line"></div>
+                    <button class="btn-buy" onclick="openOrderModal()">🛒 للطلب اضغط هنا</button>
+                </div>
+            `;
+
+            if (product.similar_products) {
+                const simIds = product.similar_products.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+                if (simIds.length > 0) {
+                    const { data: similarProducts } = await sb.from('products').select('*').in('id', simIds);
+                    if (similarProducts && similarProducts.length > 0) {
+                        document.getElementById('similar-section').style.display = 'block';
+                        document.getElementById('similar-title').textContent = 'منتجات مشابهة (' + similarProducts.length + ')';
+                        document.getElementById('similar-grid').innerHTML = similarProducts.map((p) => `
+                            <div class="sim-card" onclick="location.href='product.html?id=${p.id}'">
+                                ${p.image ? `<img class="sim-img" src="${p.image}" alt="${p.name}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">` : ''}
+                                <div class="sim-placeholder" style="${p.image ? 'display:none' : ''}">
+                                    ${getCategoryEmoji(p.category)}
+                                </div>
+                                <div class="sim-info">
+                                    <div class="sim-name">${p.name}</div>
+                                    <div class="sim-price">${p.price} ج</div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            }
+        }
+
+        function openOrderModal() {
+            document.getElementById('orderModal').classList.add('open');
+        }
+
+        function closeOrderModal() {
+            document.getElementById('orderModal').classList.remove('open');
+            document.getElementById('order-msg').style.display = 'none';
+        }
+
+        async function submitOrder() {
+            const name = document.getElementById('cust-name').value.trim();
+            const phone = document.getElementById('cust-phone').value.trim();
+            const gov = document.getElementById('cust-gov').value.trim();
+            const address = document.getElementById('cust-address').value.trim();
+            const size = document.getElementById('cust-size').value.trim(); // ✅ المقاس الجديد
+
+            const msgDiv = document.getElementById('order-msg');
+            const btnSubmit = document.getElementById('btn-submit-order');
+
+            // ✅ التحقق يشمل المقاس
+            if (!name || !phone || !gov || !address || !size) {
+                msgDiv.style.display = 'block';
+                msgDiv.style.background = 'rgba(224, 82, 82, 0.1)';
+                msgDiv.style.color = 'var(--error)';
+                msgDiv.innerText = 'يرجى ملء جميع الحقول المطلوبة لضمان التوصيل!';
+                return;
+            }
+
+            btnSubmit.innerText = '⏳ جاري إرسال الطلب...';
+            btnSubmit.disabled = true;
+            msgDiv.style.display = 'none';
+
+            const orderData = {
+                product_id: currentProductData.id,
+                product_name: currentProductData.name,
+                customer_name: name,
+                customer_phone: phone,
+                customer_address: address,
+                customer_gov: gov,
+                size: size, // ✅ إرسال المقاس لـ Supabase
+                status: 'pending',
+                product_image: currentProductData.image
+            };
+
+            const { error } = await sb.from('orders').insert([orderData]);
+
+            if (error) {
+                console.error("Supabase Error:", error);
+                msgDiv.style.display = 'block';
+                msgDiv.style.background = 'rgba(224, 82, 82, 0.1)';
+                msgDiv.style.color = 'var(--error)';
+                msgDiv.innerText = '❌ حدث خطأ أثناء إرسال الطلب، تأكد من اتصالك بالإنترنت.';
+                btnSubmit.innerText = '✅ تأكيد الأوردر';
+                btnSubmit.disabled = false;
+                return;
+            }
+
+            msgDiv.style.display = 'block';
+            msgDiv.style.background = 'rgba(82, 199, 122, 0.1)';
+            msgDiv.style.color = 'var(--success)';
+            msgDiv.innerText = '🎉 تم استلام طلبك بنجاح! سيتم التواصل معك قريباً.';
+
+            setTimeout(() => {
+                closeOrderModal();
+                btnSubmit.innerText = '✅ تأكيد الأوردر';
+                btnSubmit.disabled = false;
+                // ✅ تفريغ جميع الحقول بما فيها المقاس
+                document.getElementById('cust-name').value = '';
+                document.getElementById('cust-phone').value = '';
+                document.getElementById('cust-gov').value = '';
+                document.getElementById('cust-address').value = '';
+                document.getElementById('cust-size').value = '';
+            }, 3000);
+        }
+
+        loadProduct();
+    </script>
+</body>
+
+</html>
